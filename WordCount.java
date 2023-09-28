@@ -45,9 +45,7 @@ public class WordCount {
             	data = data.replace(" ", "");
             	data = data.toUpperCase();
             	
-            	if(data.equals("")) {
-            		data = data;
-            	}else {
+            	if(data.equals("AMERICA") || data.equals("WASHINGTON") || data.equals("PRESIDENT")) {
             		word.set(data); // set word as each input keyword
                     context.write(word, one); // create a pair <keyword, 1>
             	}
@@ -58,13 +56,8 @@ public class WordCount {
     }
 
     public static class Reduce
-            extends Reducer<Text,IntWritable,Text,IntWritable> {
+    extends Reducer<Text,IntWritable,Text,IntWritable> {
 
-    	int i = 0;
-    	int sort = 0;
-    	String[] match = new String[10];
-    	int[] val = new int[10];
-    	
         private IntWritable result = new IntWritable();
 
         public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
@@ -72,73 +65,16 @@ public class WordCount {
             for (IntWritable val : values) {
                 sum += val.get();
             }
-            
-            if(i < 10){
-            	val[i] = sum;
-            	match[i] = key.toString();
-            	i++;
-            }
-            
-            //This sorts the first full array
-            if(i == 10 && sort == 0) {
-            	int ind = 0;
-            	int changes = 0;
-            	while(ind != 9) {
-            		
-            		if(val[ind] < val[ind + 1]) {
-            			String temps = match[ind + 1]; 
-            			int temp = val[ind + 1];
-            			val[ind + 1] = val[ind];
-            			match[ind + 1] = match[ind];
-            			val[ind] = temp;
-            			match[ind] = temps;
-            			changes++;
-            		}
-            		
-            		ind++;
-            		if(changes > 0 && ind == 9) {
-            			ind = 0;
-            			changes = 0;
-            		}
-            		
-            	}
-            	sort++;
-            }
-            
-            
-            //This finds larger sum values and moves them accordingly
-            if(i == 10) {
-            	int k = 0;
-            	while(k<10) {
-            		if(val[k] < sum) {
-            			int p = 9;
-            			while(k < p) {
-            				val[p] = val[p-1];
-            				match[p] = match[p-1];
-            				p--;
-            			}
-            			val[k] = sum;
-                		match[k] = key.toString();
-                		break;
-            		}
-            		k++;
-            	}
-            }
-            
-            
+            result.set(sum);
+            context.write(key, result); // create a pair <keyword, number of occurences>
         }
-        
-        @Override
-        public void cleanup(Context context) throws IOException,
-        	InterruptedException {
-        		int imp = 0;
-        		while(imp < 10) {
-        			context.write(new Text(match[imp]), new IntWritable(val[imp]));
-        			imp++;
-        		}
-        	}
-        
     }
+            
+            
+            
+            
+            
+
         
         
        
